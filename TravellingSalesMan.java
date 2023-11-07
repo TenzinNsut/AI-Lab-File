@@ -70,4 +70,3 @@ class TravellingSalesMan
 	}
 }
 
-// This code is contributed by Rajput-Ji

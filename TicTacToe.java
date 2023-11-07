@@ -1,88 +1,133 @@
-package com.LabPractical;
-
-import java.util.Scanner;
+import java.util.*;
 
 public class TicTacToe {
+    // Constants for the game
+    private static final int BOARD_SIZE = 3;
+    private static final char EMPTY = ' ';
+    private static final char PLAYER_X = 'X';
+    private static final char PLAYER_O = 'O';
+
     public static void main(String[] args) {
-        char[][] board = {
-            {' ', ' ', ' '},
-            {' ', ' ', ' '},
-            {' ', ' ', ' '}
-        };
-        
-        char currentPlayer = 'X';
-        boolean gameWon = false;
-        
-        while (!gameWon) {
-            printBoard(board);
-            System.out.println("Player " + currentPlayer + "'s turn:");
-            Scanner scanner = new Scanner(System.in);
-            
-            int row, col;
-            do {
-                System.out.print("Enter row (0, 1, or 2): ");
-                row = scanner.nextInt();
-                System.out.print("Enter column (0, 1, or 2): ");
-                col = scanner.nextInt();
-            } while (row < 0 || row > 2 || col < 0 || col > 2 || board[row][col] != ' ');
-            
-            board[row][col] = currentPlayer;
-            
-            if (checkWinner(board, currentPlayer)) {
-                printBoard(board);
-                System.out.println("Player " + currentPlayer + " wins!");
-                gameWon = true;
-            } else if (isBoardFull(board)) {
-                printBoard(board);
-                System.out.println("It's a draw!");
-                gameWon = true;
+        // Initialize the game board, scanner, and random generator
+        char[][] board = new char[BOARD_SIZE][BOARD_SIZE];
+        Scanner scanner = new Scanner(System.in);
+        Random random = new Random();
+
+        initializeBoard(board); // Set up an empty game board
+        boolean isPlayerX = true; // Track whose turn it is
+        boolean gameFinished = false; // Flag to check if the game is over
+
+        printBoard(board); // Print the initial game board
+
+        while (true) {
+            if (isPlayerX) {
+                playPlayerTurn(board, scanner); // Player's turn
             } else {
-                currentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+                playAITurn(board, random); // AI's turn (random move)
             }
-        }
-    }
-    
-    public static void printBoard(char[][] board) {
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-                System.out.print(board[i][j]);
-                if (j < 2) {
-                    System.out.print(" | ");
+
+            printBoard(board); // Display the updated game board
+
+            if (checkGameStatus(board)) {
+                gameFinished = true; // Check if the game is over
+                char winner = isPlayerX ? PLAYER_X : PLAYER_O;
+                if (winner == EMPTY) {
+                    System.out.println("It's a draw!");
+                } else {
+                    System.out.println("Player " + winner + " wins!");
                 }
+                break; // Exit the game loop
             }
-            System.out.println();
-            if (i < 2) {
-                System.out.println("---------");
+
+            isPlayerX = !isPlayerX; // Switch turns
+        }
+
+        scanner.close();
+    }
+
+    // Initialize the game board with empty spaces
+    private static void initializeBoard(char[][] board) {
+        for (int row = 0; row < BOARD_SIZE; row++) {
+            for (int col = 0; col < BOARD_SIZE; col++) {
+                board[row][col] = EMPTY;
             }
         }
     }
-    
-    public static boolean checkWinner(char[][] board, char player) {
-        for (int i = 0; i < 3; i++) {
-            if (board[i][0] == player && board[i][1] == player && board[i][2] == player) {
+
+    // Print the current state of the game board
+    private static void printBoard(char[][] board) {
+        System.out.println("-------------");
+        for (int row = 0; row < BOARD_SIZE; row++) {
+            System.out.print("| ");
+            for (int col = 0; col < BOARD_SIZE; col++) {
+                System.out.print(board[row][col] + " | ");
+            }
+            System.out.println("\n-------------");
+        }
+    }
+
+    // Check if the game is over
+    private static boolean checkGameStatus(char[][] board) {
+        for (int row = 0; row < BOARD_SIZE; row++) {
+            if (board[row][0] != EMPTY && board[row][0] == board[row][1] && board[row][1] == board[row][2]) {
                 return true;
             }
-            if (board[0][i] == player && board[1][i] == player && board[2][i] == player) {
+        }
+
+        for (int col = 0; col < BOARD_SIZE; col++) {
+            if (board[0][col] != EMPTY && board[0][col] == board[1][col] && board[1][col] == board[2][col]) {
                 return true;
             }
         }
-        if (board[0][0] == player && board[1][1] == player && board[2][2] == player) {
+
+        if (board[0][0] != EMPTY && board[0][0] == board[1][1] && board[1][1] == board[2][2]) {
             return true;
         }
-        if (board[0][2] == player && board[1][1] == player && board[2][0] == player) {
+
+        if (board[0][2] != EMPTY && board[0][2] == board[1][1] && board[1][1] == board[2][0]) {
             return true;
         }
-        return false;
-    }
-    
-    public static boolean isBoardFull(char[][] board) {
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-                if (board[i][j] == ' ') {
-                    return false;
+
+        for (int row = 0; row < BOARD_SIZE; row++) {
+            for (int col = 0; col < BOARD_SIZE; col++) {
+                if (board[row][col] == EMPTY) {
+                    return false; // The game is still ongoing
                 }
             }
         }
-        return true;
+
+        return true; // It's a draw
+    }
+
+    // Player's turn
+    private static void playPlayerTurn(char[][] board, Scanner scanner) {
+        int row, col;
+        while (true) {
+            System.out.print("Enter row (0-2) and column (0-2) separated by space: ");
+            row = scanner.nextInt();
+            col = scanner.nextInt();
+            if (isValidMove(board, row, col)) {
+                break;
+            } else {
+                System.out.println("Invalid move. Try again.");
+            }
+        }
+        board[row][col] = PLAYER_X;
+    }
+
+    // AI's turn (random move)
+    private static void playAITurn(char[][] board, Random random) {
+        System.out.println("AI's turn (Player O):");
+        int row, col;
+        do {
+            row = random.nextInt(BOARD_SIZE);
+            col = random.nextInt(BOARD_SIZE);
+        } while (!isValidMove(board, row, col));
+        board[row][col] = PLAYER_O;
+    }
+
+    // Check if the move is valid
+    private static boolean isValidMove(char[][] board, int row, int col) {
+        return row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE && board[row][col] == EMPTY;
     }
 }
